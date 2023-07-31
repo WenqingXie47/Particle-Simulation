@@ -99,7 +99,24 @@ class ParticleSimulation:
         v_noisy = v_record + np.random.randn(*v_record.shape) * noise_std
         return x_noisy, v_noisy
     
-
+    def _get_r_square(x,softening=0.1):
+        """
+        Give the multual distance of particles
+        
+        Parameters:
+            x: a 2d array with shape (n_dim,n_particles)
+        Returns:
+            r_square: a 2d array with shape (n_particles, n_particles). 
+        """
+        n_dims = x.shape[0]
+        n_particles = x.shape[1]
+        
+        r_square = np.zeros((n_particles,n_particles))
+        for dim in range(n_dims):
+            dx = np.subtract.outer(x[dim],x[dim])
+            r_square += dx**2
+        r_square += softening**2
+        return r_square
     
 
 
