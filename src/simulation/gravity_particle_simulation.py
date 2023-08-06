@@ -18,8 +18,14 @@ class GravityParticleSimulation(ParticleSimulation):
         self.x = x
         self.v = v
         self.m = m
+        
+        
+    def get_edges(self):
+        edges =  np.outer(self.m,self.m)
+        np.fill_diagonal(edges, 0)
+        return edges
+        
 
-    
     def _particle_interaction_potential_enegry(x,m,interaction_strength):
         U=0
         for i in range(x.shape[1]):
@@ -29,24 +35,17 @@ class GravityParticleSimulation(ParticleSimulation):
                 U -= interaction_strength * m[i] * m[j] / r_norm
         return U
     
-    def _kinetic_energy(self, v):
-        K = ((1/2) * self.m * (v ** 2)).sum()
-        return K
-    
+ 
     def _potential_energy(self, x, v):
         U = GravityParticleSimulation._particle_interaction_potential_enegry(
-            x,self.e,self.interaction_strength
+            x,self.m,self.G
         )
         return U 
     
-    def _energy(self, x, v):
-        K = self._kinetic_energy(v)
-        U = self._potential_energy(x,v)
-        return U + K
-    
+
     def _get_acceleration(self, x,v,t):
         force = GravityParticleSimulation._get_particle_interaction_force(
-            x,self.m,self.interaction_strength
+            x,self.m,self.G
         )
         acceleration = force/self.m 
         return acceleration
@@ -89,7 +88,7 @@ class GravityParticleSimulation(ParticleSimulation):
         max_F = 100
         F[F > max_F] = max_F
         F[F < -max_F] = -max_F
-        f = F.sum(axis=-1)
+        f = -F.sum(axis=-1)
         return f
 
 

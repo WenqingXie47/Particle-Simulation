@@ -17,6 +17,10 @@ class ExternalFieldChargedParticleSimulation(ChargedParticleSimulation):
         self.field_phase = phase
     
     
+    def randomly_init(self):
+        self.randomly_init_particles()
+        self.randomly_init_field()
+    
     def randomly_init_field(self, amp_std=1, log_f_std=1, phase_std=1):
         self.field_amplitude = np.random.randn(self.dim) * amp_std
         self.field_frequency = np.exp(np.random.randn()*log_f_std)

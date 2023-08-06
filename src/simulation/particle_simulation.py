@@ -12,12 +12,25 @@ class ParticleSimulation:
     def init_particles(self,x,v):
         self.x = x
         self.v = v
-        
+        n_particles = x.shape[1]
+        self.m = np.ones(n_particles)
+    
+    def randomly_init(self,x_std=0.5,v_std=0.5):
+        self.randomly_init_particles(x_std,v_std)
+    
     def randomly_init_particles(self,x_std=0.5,v_std=0.5):
         self.x = np.random.randn(self.dim, self.n_particles) * x_std
         self.v = np.random.randn(self.dim, self.n_particles) * v_std
 
+    def get_masses(self):
+        return self.m
     
+    def get_charges(self):
+        return np.zeros(self.n_particles)
+    
+    def get_edges(self):
+        n_particles = self.m.shape[0]
+        return np.zeros((n_particles,n_particles))
     
     def sample_trajectory(self, dT=0.001, n_iters=10000, sample_freq=10, noise_std=0):
 
@@ -45,9 +58,9 @@ class ParticleSimulation:
 
     def _get_acceleration(self,x,v,t):
         return np.zeros(x.shape)
-    
+        
     def _kinetic_energy(self, v):
-        K = 0.5 * (v ** 2).sum()
+        K = ((1/2) * self.m * (v ** 2)).sum()
         return K
     
     def _potential_energy(self, x, v):

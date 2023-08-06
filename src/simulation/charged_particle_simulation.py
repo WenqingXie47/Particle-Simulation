@@ -10,7 +10,7 @@ class ChargedParticleSimulation(ParticleSimulation):
         
         
     def randomly_init_particles(self,x_std=0.5,v_std=0.5,m_std=0.5,e_std=0.5):
-        super().init_particles(x_std,v_std)
+        super().randomly_init_particles(x_std,v_std)
         self.m = np.random.randn(self.n_particles) * m_std
         self.e = np.random.randn(self.n_particles) * e_std
     
@@ -19,6 +19,15 @@ class ChargedParticleSimulation(ParticleSimulation):
         self.v = v
         self.m = m
         self.e = e    
+    
+
+    def get_charges(self):
+        return self.e
+        
+    def get_edges(self):
+        edges =  np.outer(self.e,self.e)
+        np.fill_diagonal(edges, 0)
+        return edges
     
     def _particle_interaction_potential_enegry(x,e,interaction_strength):
         U=0
@@ -29,20 +38,13 @@ class ChargedParticleSimulation(ParticleSimulation):
                 U += interaction_strength * e[i] * e[j] / r_norm
         return U
     
-    def _kinetic_energy(self, v):
-        K = ((1/2) * self.m * (v ** 2)).sum()
-        return K
     
     def _potential_energy(self, x, v):
         U = ChargedParticleSimulation._particle_interaction_potential_enegry(
             x,self.e,self.interaction_strength
         )
         return U 
-    
-    def _energy(self, x, v):
-        K = self._kinetic_energy(v)
-        U = self._potential_energy(x,v)
-        return U + K
+
     
     def _get_acceleration(self, x,v,t):
         force = ChargedParticleSimulation._get_particle_interaction_force(
