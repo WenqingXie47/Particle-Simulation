@@ -81,7 +81,7 @@ np.random.seed(args.seed)
 
 
 
-sim_name = f"_{args.simulation}_{args.n_particles}particles_{args.initial_vel}initvel"
+sim_name = f"{args.simulation}_{args.n_particles}particles_{args.initial_vel}initvel"
 print(sim_name)
 sim_dir = os.path.join(*["..","data",sim_name])
 if not os.path.isdir(sim_dir):

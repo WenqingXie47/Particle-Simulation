@@ -8,38 +8,36 @@ class NBodyDataset():
     NBodyDataset
 
     """
-    def __init__(self, n_hidden=0, dataset_name="se3_transformer", partition='train', max_samples=1e8):
+    def __init__(self, n_hidden=0, data_folder="data", dataset_name="se3_transformer", partition='train', max_samples=1e8):
         self.n_hidden = n_hidden
         self.max_samples = int(max_samples)
         
+        self.data_folder = data_folder
         self.dataset_name = dataset_name
         self.partition = partition
         if partition == 'val':
-            self.partition = 'valid'
-        
-
-        self.dataset_name = dataset_name        
-        self.suffix = "_" + self.partition + "_" + self.dataset_name
-
-        
-        loc, vel, charges, masses, edges = NBodyDataset.load(dir="n_body_system/dataset",suffix=self.suffix)
-        self.loc, self.vel, self.charges, self.edges, self.edge_attr = NBodyDataset.preprocess(
-            loc, vel, edges, charges
+            self.partition = 'valid'        
+        self.load(
+            self.data_folder, 
+            self.dataset_name,
+            self.partition,
         )
-
-    def load(data_folder, dataset_name, partition):
+        self.preprocess()
+        
+        
+    def load(self, data_folder, dataset_name, partition):
         
         dir = os.path.join(*[data_folder,dataset_name])
-        loc = np.load(os.path.join(dir, f"loc_{partition}.npy"))
-        vel = np.load(os.path.join(dir, f"vel_{partition}.npy"))
-        charges = np.load(os.path.join(dir, f"charges_{partition}.npy"))
-        masses = np.load(os.path.join(dir, f"masses_{partition}.npy"))
-        edges = np.load(os.path.join(dir, f"edges_{partition}.npy"))
-        return loc, vel, charges, masses, edges
+        
+        self.loc = np.load(os.path.join(dir, f"loc_{partition}.npy"))
+        self.vel = np.load(os.path.join(dir, f"vel_{partition}.npy"))
+        self.charges = np.load(os.path.join(dir, f"charges_{partition}.npy"))
+        self.masses = np.load(os.path.join(dir, f"masses_{partition}.npy"))
+        self.edge_attr = np.load(os.path.join(dir, f"edges_{partition}.npy"))
 
 
 
-    def preprocess(loc, vel, charges, edges):
+    def preprocess(self):
         """preprocess data
 
         Args:
@@ -53,42 +51,42 @@ class NBodyDataset():
         """
         
         # swap n_nodes <--> n_features dimensions
-        loc, vel = loc.transpose(2, 3), vel.transpose(2, 3)
+        self.loc = self.loc.transpose(2, 3)
+        self.vel = self.vel.transpose(2, 3)
         
         #Initialize edges and edge_attributes
         edge_attr = []
         rows, cols = [], []
-        n_nodes = loc.size(2)
+        n_nodes = self.loc.size(2)
         for i in range(n_nodes):
             for j in range(n_nodes):
                 if i != j:
-                    edge_attr.append(edges[:, i, j])
+                    edge_attr.append(self.edge_attr[:, i, j])
                     rows.append(i)
                     cols.append(j)
-        edges = np.array([rows, cols])
-        edge_attr = edge_attr.transpose(0, 1).unsqueeze(2) # swap n_nodes <--> batch_size and add nf dimension
-
-        return loc, vel, charges, edges, edge_attr
-
+        self.edges = np.array([rows, cols])
+        # swap n_nodes <--> batch_size and add nf dimension
+        self.edge_attr = edge_attr.transpose(0, 1).unsqueeze(2)
 
     def set_max_samples(self, max_samples):
         self.max_samples = int(max_samples)
-        self.data, self.edges = self.load()
-        
+
         
     def get_n_nodes(self):
-        return self.data[0].size(1)
+        return self.loc.shape[1]
 
     def __getitem__(self, i):
-        loc, vel, edge_attr, charges = self.data
-        loc, vel, edge_attr, charges = loc[i], vel[i], edge_attr[i], charges[i]
-
-
-        return loc[:-1], vel[:1], edge_attr, charges, vel[:-1]-vel[1:]
+        loc = self.loc[i]
+        vel = self.vel[i]
+        charges = self.charges[i]
+        masses = self.masses[i]
+        edge_attr = self.edge_attr[i]
+        
+        return loc[:-1], vel[:1], charges, masses, edge_attr, vel[:-1]-vel[1:]
 
 
     def __len__(self):
-        return len(self.data[0])
+        return len(self.loc)
 
     def get_edges(self, batch_size, n_nodes):
         edges = [torch.LongTensor(self.edges[0]), torch.LongTensor(self.edges[1])]
