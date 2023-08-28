@@ -141,27 +141,6 @@ x, edge_attr, u = op(x, edge_index, edge_attr, u, batch)
 
 
 
-class GCL_basic(nn.Module):
-   
-    def __init__(self):
-        super(GCL_basic, self).__init__()
-
-
-    def edge_model(self, source, target, edge_attr):
-        pass
-
-    def node_model(self, h, edge_index, edge_attr):
-        pass
-
-    def global_model():
-        pass
-
-    def forward(self, x, edge_index, edge_attr=None):
-        row, col = edge_index
-        edge_feat = self.edge_model(x[row], x[col], edge_attr)
-        x = self.node_model(x, edge_index, edge_feat)
-        return x, edge_feat
-
 
 
 class GRN(nn.Module):
